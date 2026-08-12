@@ -1,0 +1,32 @@
+name: Build & Release WordPress Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Create Plugin ZIP Archive
+        run: |
+          mkdir -p build/wp-reviews-plugin-for-google
+          rsync -av --exclude='build' --exclude='.git' --exclude='.github' ./ build/wp-reviews-plugin-for-google/
+          cd build
+          zip -r google-review-by-emon.zip wp-reviews-plugin-for-google
+
+      - name: Create GitHub Release and Upload Zip Asset
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/google-review-by-emon.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
