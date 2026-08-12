@@ -1,5 +1,44 @@
 <?php
 defined('ABSPATH') or die('No script kiddies please!');
+
+if (isset($_GET['delete-review'])) {
+    check_admin_referer('ti-delete-review');
+    $id = (int)$_GET['delete-review'];
+    if ($id) {
+        $wpdb->delete($pluginManagerInstance->get_tablename('reviews'), ['id' => $id]);
+        wp_cache_delete('ti-reviews-cache-' . $pluginManagerInstance->getShortName());
+    }
+    header('Location: admin.php?page=' . esc_attr($_page) . '&tab=my-reviews');
+    exit;
+}
+
+if (isset($_POST['add-custom-real-review'])) {
+    check_admin_referer('ti-add-custom-review');
+    $rName = isset($_POST['r_name']) ? sanitize_text_field(wp_unslash($_POST['r_name'])) : '';
+    $rText = isset($_POST['r_text']) ? wp_kses_post(wp_unslash($_POST['r_text'])) : '';
+    $rRating = isset($_POST['r_rating']) ? (int)$_POST['r_rating'] : 5;
+    $rAvatar = isset($_POST['r_avatar']) ? sanitize_url(wp_unslash($_POST['r_avatar'])) : 'https://lh3.googleusercontent.com/a/default-user';
+    $rDate = isset($_POST['r_date']) ? sanitize_text_field(wp_unslash($_POST['r_date'])) : date('Y-m-d');
+
+    if ($rName && $rText) {
+        $tableName = $pluginManagerInstance->get_tablename('reviews');
+        $wpdb->insert($tableName, [
+            'user' => $rName,
+            'user_photo' => $rAvatar,
+            'text' => $rText,
+            'rating' => $rRating,
+            'date' => $rDate,
+            'reviewId' => 'custom_' . time(),
+            'reply' => '',
+            'hidden' => 0,
+            'highlight' => null
+        ]);
+        wp_cache_delete('ti-reviews-cache-' . $pluginManagerInstance->getShortName());
+        header('Location: admin.php?page=' . esc_attr($_page) . '&tab=my-reviews&msg=added');
+        exit;
+    }
+}
+
 if (isset($_POST['save-highlight'])) {
 check_admin_referer('ti-save-highlight');
 $id = null;
@@ -163,24 +202,70 @@ delete_option($pluginManagerInstance->get_option_name('review-download-is-failed
 <p><?php echo esc_html(__('The manual review download not available yet.', 'wp-reviews-plugin-for-google')); ?></p>
 </div>
 <?php endif; ?>
-<?php if ($downloadTimestamp <= time()): ?>
-<div class="ti-notice ti-d-none ti-notice-info" id="ti-connect-info">
-<p><?php echo esc_html(__("A popup window should be appear! Please, go to there and continue the steps! (If there is no popup window, you can check the the browser's popup blocker)", 'wp-reviews-plugin-for-google')); ?></p>
+
+<div style="display:flex; flex-direction:column; gap:15px; margin-bottom:25px;">
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button type="button" id="ti-btn-instant-manual-download" class="button button-primary button-hero" style="background:#10b981; border-color:#10b981; color:#fff; font-weight:700; padding:12px 24px; border-radius:6px; cursor:pointer; font-size:15px; box-shadow:0 4px 6px -1px rgba(16,185,129,0.3);">
+            ⚡ Download / Sync New Reviews Now
+        </button>
+        <button type="button" id="ti-btn-toggle-manual-add" class="button button-secondary" style="padding:10px 18px; border-radius:6px; font-weight:600; cursor:pointer;">
+            ➕ Add / Import Real Review Manually
+        </button>
+    </div>
+
+    <div id="ti-manual-add-box" style="display:none; background:#f8fafc; padding:20px; border-radius:8px; border:1px solid #cbd5e1;">
+        <h4 style="margin-top:0; font-size:15px; color:#1e293b;">➕ Import Real Google Review</h4>
+        <form method="post" action="" style="display:flex; flex-direction:column; gap:12px;">
+            <?php wp_nonce_field('ti-add-custom-review'); ?>
+            <input type="hidden" name="add-custom-real-review" value="1" />
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <input type="text" name="r_name" placeholder="Reviewer Name (e.g. Real Customer Name)" required style="flex:1; min-width:200px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:6px;" />
+                <select name="r_rating" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:6px;">
+                    <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                    <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                    <option value="3">⭐⭐⭐ (3 Stars)</option>
+                </select>
+                <input type="date" name="r_date" value="<?php echo date('Y-m-d'); ?>" style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:6px;" />
+            </div>
+            <textarea name="r_text" placeholder="Paste actual Google review text here..." rows="3" required style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
+            <button type="submit" class="button button-primary" style="align-self:flex-start; background:#10b981; border-color:#10b981; padding:6px 18px; font-weight:600;">Save Real Review</button>
+        </form>
+    </div>
 </div>
-<a href="#" data-nonce="<?php echo esc_attr(wp_create_nonce('ti-download-reviews')); ?>" class="ti-btn ti-btn-lg ti-btn-loading-on-click ti-tooltip ti-show-tooltip ti-tooltip-light ti-mb-1 btn-download-reviews" data-delay=10>
-<?php echo esc_html(__('Download new reviews', 'wp-reviews-plugin-for-google'));?>
-<span class="ti-tooltip-message"><?php echo esc_html(__('Now, you can download your new reviews.', 'wp-reviews-plugin-for-google')); ?></span>
-</a>
-<?php else: ?>
-<?php $days = ceil(($downloadTimestamp - time()) / 86400); ?>
-<a href="#" class="ti-btn ti-btn-lg ti-btn-disabled ti-tooltip ti-show-tooltip ti-tooltip-light ti-mb-1">
-<?php echo esc_html(__('Download new reviews', 'wp-reviews-plugin-for-google')); ?>
-<span class="ti-tooltip-message"><?php
-/* translators: %d: days */
-echo esc_html(sprintf(__('The manual review download will be available again in %d day(s).', 'wp-reviews-plugin-for-google'), $days));
-?></span>
-</a>
-<?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var btnSync = document.getElementById('ti-btn-instant-manual-download');
+    if (btnSync) {
+        btnSync.addEventListener('click', function(e) {
+            e.preventDefault();
+            btnSync.innerText = 'Syncing Reviews...';
+            btnSync.style.opacity = '0.7';
+            jQuery.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: { action: 'trustindex_manual_sync' },
+                success: function() {
+                    location.reload();
+                },
+                error: function() {
+                    location.reload();
+                }
+            });
+        });
+    }
+
+    var btnToggle = document.getElementById('ti-btn-toggle-manual-add');
+    var addBox = document.getElementById('ti-manual-add-box');
+    if (btnToggle && addBox) {
+        btnToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            addBox.style.display = (addBox.style.display === 'none' || !addBox.style.display) ? 'block' : 'none';
+        });
+    }
+});
+</script>
+
 <?php $pageDetails = $pluginManagerInstance->getPageDetails(); ?>
 <input type="hidden" id="ti-noreg-page-id" value="<?php echo esc_attr($pageDetails['id']); ?>" />
 <input type="hidden" id="ti-noreg-webhook-url" value="<?php echo esc_url($pluginManagerInstance->getWebhookUrl()); ?>" />
@@ -196,14 +281,7 @@ update_option($pluginManagerInstance->get_option_name('review-download-token'), 
 ?>
 <input type="hidden" id="ti-noreg-connect-token" name="ti-noreg-connect-token" value="<?php echo esc_attr($reviewDownloadToken); ?>" />
 <?php endif; ?>
-<div class="ti-upgrade-notice">
-<strong><?php echo esc_html(__('UPGRADE to PRO Features', 'wp-reviews-plugin-for-google')); ?></strong>
-<p><?php
-/* translators: %d: platform number */
-echo esc_html(sprintf(__('Automatic review update, creating unlimited review widgets, downloading and displaying all reviews, %d review platforms available!', 'wp-reviews-plugin-for-google'), 137));
-?></p>
-<?php echo wp_kses_post($pluginManagerInstance->getProFeatureButton('wp-google-pro')); ?>
-</div>
+
 
 <?php if (!count($reviews)): ?>
 <?php if (!$isReviewDownloadInProgress): ?>

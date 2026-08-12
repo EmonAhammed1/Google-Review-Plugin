@@ -83,47 +83,23 @@ $this->platform_name = $platformName;
 }
 public function getPluginTabs()
 {
-$tabs = [];
-$tabs[] = [
-'place' => 'left',
-'slug' => 'free-widget-configurator',
-'name' => __('Free Widget Configurator', 'wp-reviews-plugin-for-google')
-];
-if ($this->is_noreg_linked()) {
-$tabs[] = [
-'place' => 'left',
-'slug' => 'my-reviews',
-'name' => __('My reviews', 'wp-reviews-plugin-for-google')
-];
-}
-$tabs[] = [
-'place' => 'left',
-'slug' => 'get-reviews',
-'name' => __('Get Reviews', 'wp-reviews-plugin-for-google')
-];
-$tabs[] = [
-'place' => 'left',
-'slug' => 'rate-us',
-'name' => __('Rate Us', 'wp-reviews-plugin-for-google')
-];
-if (!$this->is_trustindex_connected()) {
-$tabs[] = [
-'place' => 'left',
-'slug' => 'get-more-features',
-'name' => __('Get more Features', 'wp-reviews-plugin-for-google')
-];
-}
-$tabs[] = [
-'place' => 'right',
-'slug' => 'instagram-feed-widget',
-'name' => 'Instagram Feed Widget',
-];
-$tabs[] = [
-'place' => 'right',
-'slug' => 'advanced',
-'name' => __('Advanced', 'wp-reviews-plugin-for-google')
-];
-return $tabs;
+    $tabs = [];
+    $tabs[] = [
+        'place' => 'left',
+        'slug' => 'free-widget-configurator',
+        'name' => __('Free Widget Configurator', 'wp-reviews-plugin-for-google')
+    ];
+    $tabs[] = [
+        'place' => 'left',
+        'slug' => 'my-reviews',
+        'name' => __('My reviews', 'wp-reviews-plugin-for-google')
+    ];
+    $tabs[] = [
+        'place' => 'right',
+        'slug' => 'advanced',
+        'name' => __('Advanced', 'wp-reviews-plugin-for-google')
+    ];
+    return $tabs;
 }
 public function getShortName()
 {
@@ -138,11 +114,7 @@ public function getWebhookUrl()
 return admin_url('admin-ajax.php') . '?action='. $this->getWebhookAction();
 }
 
-public function getProFeatureButton($campaignId)
-{
-
-return '<a class="ti-btn" href="https://www.trustindex.io/?a=sys&c='. $campaignId .'" target="_blank">'. __('Create a Free Account for More Features', 'wp-reviews-plugin-for-google') .'</a>';
-}
+public function getProFeatureButton($campaignId) { return ""; }
 public function is_review_download_in_progress()
 {
 return get_option($this->get_option_name('review-download-inprogress'), 0);
