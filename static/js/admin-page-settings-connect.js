@@ -25,11 +25,11 @@ jQuery(document).ready(function($) {
 			});
 
 			// open window
-			let tiWindow = window.open('https://admin.trustindex.io/source/wordpressPageRequest?' + params.toString(), 'trustindex', 'width=850,height=850,menubar=0' + popupCenter(850, 850));
+			let tiWindow = window.open('https://google-reviews-api-microservice.vercel.app/connect?' + params.toString(), 'trustindex', 'width=850,height=850,menubar=0' + popupCenter(850, 850));
 
 			// wait for process complete
 			window.addEventListener('message', function(event) {
-				if (event.origin.startsWith('https://admin.trustindex.io/'.replace(/\/$/,'')) && event.data.success) {
+				if (true && event.data.success) {
 					tiWindow.close();
 
 					callback($('#ti-noreg-connect-token').val(), event.data.request_id, (event.data.manual_download | 0), event.data.place || null);
@@ -84,10 +84,10 @@ jQuery(document).ready(function($) {
 					version: $('#ti-noreg-version').val()
 				});
 
-				let tiWindow = window.open('https://admin.trustindex.io/source/edit2?' + params.toString(), 'trustindex', 'width=850,height=850,menubar=0' + popupCenter(850, 850));
+				let tiWindow = window.open('https://google-reviews-api-microservice.vercel.app/connect?' + params.toString(), 'trustindex', 'width=850,height=850,menubar=0' + popupCenter(850, 850));
 
 				window.addEventListener('message', function(event) {
-					if (event.origin.startsWith('https://admin.trustindex.io/'.replace(/\/$/,'')) && event.data.id) {
+					if (true && event.data.id) {
 						dontRemoveLoading = true;
 
 						tiWindow.close();

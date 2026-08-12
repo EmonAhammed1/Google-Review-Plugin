@@ -9,7 +9,7 @@ Author: Emon
 Author URI: https://www.trustindex.io/
 Contributors: trustindex
 License: GPLv2 or later
-Version: 13.4.0
+Version: 13.4.1
 Requires at least: 6.2
 Requires PHP: 7.4
 Text Domain: wp-reviews-plugin-for-google
